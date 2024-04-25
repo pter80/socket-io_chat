@@ -1,10 +1,15 @@
 /*global io*/
-var socket = io();
-//var socket = io("http://163.172.211.49:3001",{autoConnect:false});
+//var socket = io();
+var socket = io("http://163.172.211.49:3000",{autoConnect:false});
 
 
-
-
+$("#btConnect").on("click",function(){
+    console.log ("socket",socket);
+    socket.data = {username: $("#loginName").val()};
+    socket.emit('send-nickname', $("#loginName").val());
+    socket.connect();
+    
+})
 
 /**
  * Envoi d'un message
