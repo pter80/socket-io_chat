@@ -25,10 +25,10 @@ io.on('connection', function (socket) {
   socket.on('chat-message', function (message) {
     io.emit('chat-message', message);
     console.log("Message inséré",message,socket.id,socket.nickname);
-    });
-
   });
+
 });
+
   
 
 /**
