@@ -6,22 +6,36 @@ const sqlite3 = require('sqlite3');
 const { open } = require('sqlite');
 
 
-let db = new sqlite3.Database('chat.db', (err) => {
-  if (err) {
-    console.error(err.message);
-  }
-  console.log('Connected to the chat database.');
 
 
-});
-db.exec(`CREATE TABLE IF NOT EXISTS messages (
+
+async function main() {
+  // open the database file
+  console.log("Ouverture de la base de données");
+  const db = await open({
+    filename: 'chat.db',
+    driver: sqlite3.Database
+  });
+
+  // create our 'messages' table (you can ignore the 'client_offset' column for now)
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS messages (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        content TEXT, sender TEXT, senderId TEXT)`,(err)=>{
-          if (err) {
-            console.log(err.message);
-          }
-        console.log("Table créée");
-        });
+        client_offset TEXT UNIQUE,
+        content TEXT
+    );
+  `);
+  return db;
+}
+  
+async function addRecord(db,message,socket) {
+    await db.run(`INSERT INTO messages (content) VALUES (?)`,[message.text],function(err) {
+      if (err) {
+        return console.log(err.message);
+      }
+      console.log("Message inséré",message,socket.id);
+    });
+}
   
 
 /**
@@ -51,13 +65,8 @@ io.on('connection', function (socket) {
 
   socket.on('chat-message', function (message) {
     io.emit('chat-message', message);
+    addRecord(dtBase,message,socket);
     
-    db.run(`INSERT INTO messages (content) VALUES (?)`,[message.text],function(err) {
-      if (err) {
-        return console.log(err.message);
-      }
-      console.log("Message inséré",message,socket.id);
-    });
   
   });
 })
@@ -69,4 +78,6 @@ http.listen(3000, function () {
   console.log('Le serveur écoute sur le port *:3000');
   
 });
-
+let dtBase=main();
+console.log(dtBase);
+addRecord(dtBase,{text:"coucou"},socket);
