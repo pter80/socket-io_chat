@@ -28,8 +28,14 @@ async function main() {
   return db;
 }
   
-async function addRecord(db,message,socket) {
-    await db.run(`INSERT INTO messages (content) VALUES (?)`,[message.text],function(err) {
+async function addRecord(message,socket) {
+    console.log("Ouverture de la base de données");
+    const db = await open({
+      filename: 'chat.db',
+      driver: sqlite3.Database
+    });
+    await db.exec(`INSERT INTO messages (content) VALUES (?)`,[message.text],function(err) {
+      
       if (err) {
         return console.log(err.message);
       }
@@ -63,9 +69,9 @@ io.on('connection', function (socket) {
    * Réception de l'événement 'chat-message' et réémission vers tous les utilisateurs
    */
 
-  socket.on('chat-message', function (message) {
+  socket.on('chat-message', function (message,socket) {
     io.emit('chat-message', message);
-    addRecord(dtBase,message,socket);
+    addRecord(message,socket);
     
   
   });
@@ -80,4 +86,4 @@ http.listen(3000, function () {
 });
 let dtBase=main();
 console.log(dtBase);
-addRecord(dtBase,{text:"coucou"},socket);
+//addRecord(dtBase,{text:"coucou"},socket);
